@@ -1,1 +1,1 @@
-"# CESI-InfraAsCode" 
+CESI-InfraAsCode
