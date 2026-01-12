@@ -24,7 +24,7 @@ kubectl get pods
 kubectl get services
 kubectl get nodes
 
--- petite balade dans le man et sur le tuto minikube+kubectl
+-- petite balade sur le tuto minikube+kubectl
 
 kubectl delete service nginx
 kubectl delete deployment nginx
