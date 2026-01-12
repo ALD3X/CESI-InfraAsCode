@@ -1,3 +1,7 @@
+sudo usermod -aG docker $USER
+
+newgrp docker
+
 # kubectl
 curl -LO https://storage.googleapis.com/kubernetes-release/release/$(curl -s https://storage.googleapis.com/kubernetes-release/release/stable.txt)/bin/linux/amd64/kubectl
 
@@ -21,7 +25,9 @@ kubectl expose deployment nginx --type=NodePort --port=80
 minikube service nginx --url
 
 kubectl get pods
+
 kubectl get services
+
 kubectl get nodes
 
 -- petite balade sur le tuto minikube+kubectl
