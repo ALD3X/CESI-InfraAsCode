@@ -1,0 +1,1 @@
+Config du Réseau => nat + pont, config concluante (ping ok)
