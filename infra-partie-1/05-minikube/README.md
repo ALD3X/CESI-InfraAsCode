@@ -1,5 +1,5 @@
+- [guide installation minikube](https://kubernetes.io/fr/docs/tasks/tools/install-minikube/)
 sudo usermod -aG docker $USER
-
 newgrp docker
 
 # kubectl
