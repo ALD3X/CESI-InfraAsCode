@@ -1,0 +1,7 @@
+- name: Tests de validation du déploiement OpenTofu
+  hosts: opentofu
+  gather_facts: false
+  become: false
+
+  roles:
+    - opentofu_tests

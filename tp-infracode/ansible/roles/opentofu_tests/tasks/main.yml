@@ -1,0 +1,86 @@
+- name: Vérifier que Docker est installé
+  command: docker --version
+  register: docker_version
+  changed_when: false
+
+- name: Afficher la version Docker
+  debug:
+    msg: "{{ docker_version.stdout }}"
+
+- name: Vérifier qu'OpenTofu est installé
+  command: tofu version
+  register: tofu_version
+  changed_when: false
+
+- name: Afficher la version OpenTofu
+  debug:
+    msg: "{{ tofu_version.stdout }}"
+
+- name: Récupérer la liste des conteneurs actifs
+  command: docker ps --format "{{ '{{' }}.Names{{ '}}' }}"
+  register: docker_containers
+  changed_when: false
+
+- name: Vérifier la présence des conteneurs requis
+  assert:
+    that:
+      - "'postgres' in docker_containers.stdout_lines"
+      - "'redis' in docker_containers.stdout_lines"
+      - "'opentofu_api' in docker_containers.stdout_lines"
+      - "'nginx' in docker_containers.stdout_lines"
+    fail_msg: "Un ou plusieurs conteneurs requis ne sont pas lancés"
+    success_msg: "Tous les conteneurs requis sont lancés"
+
+- name: Tester la connexion PostgreSQL depuis le conteneur
+  command: >
+    docker exec postgres
+    pg_isready -U {{ lookup('env', 'POSTGRES_USER') | default('postgres') }}
+  register: postgres_check
+  changed_when: false
+
+- name: Vérifier que PostgreSQL est prêt
+  assert:
+    that:
+      - "'accepting connections' in postgres_check.stdout"
+
+- name: Tester Redis (PING)
+  command: docker exec redis redis-cli ping
+  register: redis_check
+  changed_when: false
+
+- name: Vérifier que Redis répond
+  assert:
+    that:
+      - redis_check.stdout == "PONG"
+
+- name: Tester l'API (port 3000)
+  uri:
+    url: "http://localhost:{{ api_port | default(3000) }}"
+    status_code: 200
+  register: api_response
+
+- name: Vérifier que l'API répond
+  assert:
+    that:
+      - api_response.status == 200
+
+- name: Tester Nginx (port 8080)
+  uri:
+    url: http://localhost:8080
+    status_code: 200
+  register: nginx_response
+
+- name: Vérifier que Nginx répond
+  assert:
+    that:
+      - nginx_response.status == 200
+
+- name: Vérifier le réseau Docker
+  command: docker network inspect opentofu_network
+  register: network_inspect
+  changed_when: false
+
+- name: Vérifier que le réseau existe
+  assert:
+    that:
+      - network_inspect.rc == 0

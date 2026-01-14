@@ -1,0 +1,47 @@
+name: WebSolutions - OpenTofu + Ansible (Docker)
+
+on:
+    push:
+        branches: ["main"]
+    pull_request:
+    workflow_dispatch:
+
+jobs:
+    websolutions:
+        runs-on: ubuntu-latest
+
+        steps:
+            - name: Checkout
+              uses: actions/checkout@v4
+
+            - name: Setup OpenTofu
+              uses: opentofu/setup-opentofu@v1
+
+            - name: Install Ansible + deps
+              run: |
+                  sudo apt-get update
+                  sudo apt-get install -y ansible python3-pip
+                  pip3 install docker
+                  ansible-galaxy collection install community.docker
+
+            # --- Provision infra (OpenTofu) ---
+            - name: OpenTofu init
+              working-directory: opentofu
+              run: tofu init
+
+            - name: OpenTofu apply
+              working-directory: opentofu
+              run: tofu apply -auto-approve
+
+            # --- Configure + Verify (Ansible) ---
+            # Sur GitHub Actions (Linux), on force api_url à localhost.
+            - name: Run Ansible playbook
+              run: |
+                  ansible-playbook -i ansible/inventory.ini ansible/playbook.yml \
+                    -e api_url="http://localhost:8080"
+
+            # --- Cleanup (toujours) ---
+            - name: OpenTofu destroy (cleanup)
+              if: always()
+              working-directory: opentofu
+              run: tofu destroy -auto-approve
